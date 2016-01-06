@@ -57,6 +57,8 @@ int search_by_value(struct node **head, int dvalue) {
     return -1;
 }
 
+//Insert to the front of the list
+//Returns:  0 on success and -1 on failure.
 int insert_at_front(struct node **head, int newval) {
     struct node *newnode = malloc(sizeof(struct node));
     if(newnode == NULL) {
@@ -77,6 +79,8 @@ int insert_at_front(struct node **head, int newval) {
     return 0;
 }
 
+//Insert to the tail of the list
+//Returns:  0 on success and -1 on failure.
 int insert_at_tail(struct node **head, int newval) {
     struct node *newnode = malloc(sizeof(struct node));
     newnode->value = newval;
@@ -99,8 +103,8 @@ int insert_at_tail(struct node **head, int newval) {
     return 0;
 }
 
-//inserts a node into the list at position "newval", first position is 1.
-//index of 0 not allowed.
+//Insert at the specified index of the list
+//Returns:  0 on success and -1 on failure.
 int insert_at_index(struct node **head, int newval, int index) {
     if(index<1) {
         fputs("Index to insert_at_index is < 1, index out of bounds!\n", stderr);
@@ -136,6 +140,8 @@ int insert_at_index(struct node **head, int newval, int index) {
     
 }
 
+//Deletes the head of the list.
+//Returns:  0 on success and -1 on failure.
 int delete_head(struct node **head) {
     //handle the empty list case
     if(*head == NULL) {
@@ -150,6 +156,8 @@ int delete_head(struct node **head) {
     return 0;
 }
 
+//Deletes the tail of the list.
+//Returns:  0 on success and -1 on failure.
 int delete_tail(struct node **head) {
     //handle the empty list case
     if(*head == NULL) {
@@ -167,6 +175,8 @@ int delete_tail(struct node **head) {
     return 0;
 }
 
+//Deletes the node at the specified index.
+//Returns:  0 on success and -1 on failure.
 int delete_at_index(struct node **head, int index) {
     if(index<1) {
         fputs("Index to delete_at_index is < 1, index out of bounds!\n", stderr);
@@ -197,6 +207,8 @@ int delete_at_index(struct node **head, int index) {
     return 0;
 }
 
+//Deletes the node with the specified value
+//Returns:  0 on success and -1 on failure.
 int delete_by_value(struct node **head, int value) {
     int delindex = search_by_value(head, value);
     if(delindex != -1) {
@@ -205,7 +217,7 @@ int delete_by_value(struct node **head, int value) {
     return -1;
 }
 
-
+//Prints the list from head to tail.
 void print_list(struct node **head) {
     if(*head == NULL) {
         printf("List is empty!\n");
@@ -220,12 +232,14 @@ void print_list(struct node **head) {
     }
 }
 
+//Reverses the entire list.
+//Returns:  0 on success and -1 on failure.
 int reverse_list(struct node **head) {
     struct node *current = *head;
     struct node *newhead = NULL;
     struct node *temp = NULL;
     //case 1:  if the list is empty, or has only one element,
-    //return success
+    //return success since the reversal has not technically failed.
     if(*head == NULL || current->next == NULL) {
         return 0;
     }
