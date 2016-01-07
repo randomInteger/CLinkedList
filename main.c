@@ -4,6 +4,8 @@
 //
 //  A basic linked list implementation in C.
 //
+//
+//
 //  Created by Christopher Gleeson on 12/22/15.
 //  Copyright © 2015 Christopher Gleeson. All rights reserved.
 //
@@ -16,6 +18,9 @@ struct node {
     struct node *next;
 };
 
+
+//Delete the list entirely.
+//Returns: -1 if the list was already empty, else returns 0 on success.
 int delete_list(struct node **head) {
     //case1:  empty list
     if(*head == NULL) {
@@ -35,14 +40,15 @@ int delete_list(struct node **head) {
     return 0;
 }
 
-//search the list for the dvalue and return the index if found
-//return -1 if not found
-int search_by_value(struct node **head, int dvalue) {
+//Search the list for the dvalue and assign the index into findex
+//Return -1 on failure and 0 on success.
+int search_by_value(struct node **head, int dvalue, int *findex) {
     struct node *current = *head;
     int index = 1;
     while(current->next != NULL) {
         if(current->value == dvalue) {
-            return index;
+            *findex = index;
+            return 0;
         }else {
             current = current->next;
         }
@@ -50,20 +56,23 @@ int search_by_value(struct node **head, int dvalue) {
     }
     //the element could still be the last item
     if(current->value == dvalue) {
-        return index;
+        *findex = index;
+        return 0;
     }
     
     //if we got here, we did not find the value
     return -1;
 }
 
-//Insert to the front of the list
-//Returns:  0 on success and -1 on failure.
+//Inserts to the front of the list, updating pointer to head.
+//Asserts on malloc failure and returns 0 on success
 int insert_at_front(struct node **head, int newval) {
     struct node *newnode = malloc(sizeof(struct node));
     if(newnode == NULL) {
         assert(newnode != NULL);
-        //if we failed to allocate from the heap, bail out.
+        //if we failed to allocate from the heap, assert.
+        //This could/should be changed in production code
+        //to simply return -1.
     }
     newnode->value = newval;
     //case 1:  insert into an empty list
@@ -79,14 +88,16 @@ int insert_at_front(struct node **head, int newval) {
     return 0;
 }
 
-//Insert to the tail of the list
-//Returns:  0 on success and -1 on failure.
+//Inserts to the tail of the list, updating pointer to head.
+//Asserts on malloc failure and returns 0 on success
 int insert_at_tail(struct node **head, int newval) {
     struct node *newnode = malloc(sizeof(struct node));
     newnode->value = newval;
     if(newnode == NULL) {
         assert(newnode != NULL);
         //if we failed to allocate from the heap, bail out.
+        //This could/should be changed in production code
+        //to simply return -1.
     }
     newnode->value = newval;
     //case 1:  insert into empty list
@@ -103,45 +114,48 @@ int insert_at_tail(struct node **head, int newval) {
     return 0;
 }
 
-//Insert at the specified index of the list
-//Returns:  0 on success and -1 on failure.
+//Inserts a node into the list at index "newval" where index is from
+//0 to N-1 for N elements.
+//Returns: -1 if the index was below 0, 0 on success
 int insert_at_index(struct node **head, int newval, int index) {
-    if(index<1) {
-        fputs("Index to insert_at_index is < 1, index out of bounds!\n", stderr);
+    if(index < 0) {
+        fputs("Index to insert_at_index is < 0, index out of bounds!\n", stderr);
         return -1;
-    }else if(index==1) {
+    }else if(index == 0) {
         return insert_at_front(head, newval);
     }else {
         struct node *current = *head;
-        //initialize i to the first position (index 1 is first position)
-        int i = 1;
+        struct node *prev = current;
+        //initialize i to the first position
+        int i = 0;
         struct node *newnode = malloc(sizeof(struct node));
         if(newnode == NULL) {
             assert(newnode != NULL);
             //if we failed to allocate from the heap, bail out.
+            //This could/should be changed in production code
+            //to simply return -1.
         }
         newnode->value = newval;
-        while(current->next->next != NULL && i < (index-1)){
-            //we need to look one ahead so we have the pointer
-            //to the element that must be inserted in front of
+        while(current->next != NULL && i < (index - 1)){
+            //If the index is higher than the size of the list
+            //insertion happens at the tail.
+            prev = current;
             current = current->next;
             i++;
         }
-        //special case:  if the index was the equal to or higher than the tail
-        //in this case, we would stop one element too soon.
-        if(i<(index-1)) current = current->next;
-        
-        struct node * temp;
-        temp = current->next;
-        current->next = newnode;
-        newnode->next = temp;
+        //Insert the new node at the position of current
+        //which is either index if index is in the list, or
+        //is at the tail
+        prev->next = newnode;
+        newnode->next = current;
     }
     return 0;
     
 }
 
-//Deletes the head of the list.
-//Returns:  0 on success and -1 on failure.
+//Deletes the head node, making the next node (if it exists)
+//the new head.
+//Returns: -1 on error (empty list) or 0 on success.
 int delete_head(struct node **head) {
     //handle the empty list case
     if(*head == NULL) {
@@ -156,8 +170,8 @@ int delete_head(struct node **head) {
     return 0;
 }
 
-//Deletes the tail of the list.
-//Returns:  0 on success and -1 on failure.
+//Deletes the tail node.
+//Returns: -1 on error (empty list) or 0 on success.
 int delete_tail(struct node **head) {
     //handle the empty list case
     if(*head == NULL) {
@@ -165,59 +179,53 @@ int delete_tail(struct node **head) {
         return -1;
     }
     struct node *current = *head;
-    while(current->next->next != NULL) {
-        //have to look one ahead to update the pointer to the last element
+    struct node *prev = current;
+    while(current->next != NULL) {
+        prev = current;
         current = current->next;
     }
-    struct node * temp = current->next;
-    current->next = NULL;
-    free(temp);
+    prev->next = NULL;
+    free(current);
     return 0;
 }
 
-//Deletes the node at the specified index.
-//Returns:  0 on success and -1 on failure.
+//Deletes the node at specified index if index is in the list.
+//Returns:  -1 on error, 0 on success
 int delete_at_index(struct node **head, int index) {
-    if(index<1) {
-        fputs("Index to delete_at_index is < 1, index out of bounds!\n", stderr);
+    if(index < 0) {
+        fputs("Index to delete_at_index is < 0, index out of bounds!\n", stderr);
         return -1;
     }else if(index==1) {
         return delete_head(head);
     }else {
         struct node *current = *head;
-        int i=1;
-        while(current->next->next != NULL && i < (index-1)){
-            //we need to look one ahead so we have the pointer
-            //to the element that must be updated in the deletion
+        struct node *prev = current;
+        int i=0;
+        while(current->next != NULL && i < (index-1)){
+            prev = current;
             current = current->next;
             i++;
-
         }
-        //special case:  if the index was the equal to or higher than the tail
-        //in this case, we would stop one element too soon.
-        if(i<(index-1)) {
-            return delete_tail(head);
-        }
-        
-        //Regular case, current points to the item before the item to be deleted
-        struct node *temp = current->next->next;
-        free(current->next);
-        current->next = temp;
+        prev->next = current->next;
+        current->next = NULL;
+        free(current);
     }
     return 0;
 }
 
-//Deletes the node with the specified value
-//Returns:  0 on success and -1 on failure.
+//Deletes the node at specified index if index is in the list.
+//Returns:  -1 on error, 0 on success
 int delete_by_value(struct node **head, int value) {
-    int delindex = search_by_value(head, value);
-    if(delindex != -1) {
-        return delete_at_index(head, delindex);
+    int index = 0;
+    int *iptr = &index;
+    int result = search_by_value(head, value, iptr);
+    if(result != -1 && iptr != NULL) {
+        return delete_at_index(head, *iptr);
     }
     return -1;
 }
 
-//Prints the list from head to tail.
+//Prints the list
 void print_list(struct node **head) {
     if(*head == NULL) {
         printf("List is empty!\n");
@@ -232,14 +240,15 @@ void print_list(struct node **head) {
     }
 }
 
-//Reverses the entire list.
-//Returns:  0 on success and -1 on failure.
+//Reverses the list and updates head pointer to point
+//to the new list.
+//Returns 0 on success, empty list, singleton list.
 int reverse_list(struct node **head) {
     struct node *current = *head;
     struct node *newhead = NULL;
     struct node *temp = NULL;
     //case 1:  if the list is empty, or has only one element,
-    //return success since the reversal has not technically failed.
+    //return success
     if(*head == NULL || current->next == NULL) {
         return 0;
     }
@@ -263,8 +272,12 @@ int reverse_list(struct node **head) {
 int main(int argc, const char * argv[]) {
     //This main is just for testing purposes so you can exercise the code
     
+    int result = -1;
+    
     struct node *head=NULL;
     struct node **hhead = &head;
+    
+    //Populate the list
     insert_at_front(hhead, 3);
     insert_at_front(hhead, 2);
     insert_at_front(hhead, 1);
@@ -275,28 +288,36 @@ int main(int argc, const char * argv[]) {
     print_list(hhead);
     printf("\n");
     
+    //Reverse the list
     reverse_list(hhead);
     printf("List after reversal: \n");
     print_list(hhead);
     printf("\n");
     
+    //Reverse the list again
     reverse_list(hhead);
     printf("List after reversal: \n");
     print_list(hhead);
     printf("\n");
     
-    insert_at_index(hhead, 666, 5);
-    printf("List after insert val of 666 at index 5 is:\n");
+    //Some insertions by index
+    insert_at_index(hhead, 666, 4);
+    printf("List after insert val of 666 at index 4 is:\n");
     print_list(hhead);
     printf("\n");
-    
     insert_at_index(hhead, 888, 7);
     printf("List after insert val of 888 at index 7 is:\n");
     print_list(hhead);
     printf("\n");
     
-    int si = search_by_value(hhead, 666);
-    printf("Search by value for value 666 returned: %d\n", si);
+    //pointer to receive the lookup return index.
+    int returnindex = 0;
+    int *indxptr = &returnindex;
+    
+    
+    search_by_value(hhead, 666, indxptr);
+    
+    printf("Search by value for value 666 returned: %d\n", *indxptr);
     print_list(hhead);
     printf("\n");
     
@@ -305,18 +326,24 @@ int main(int argc, const char * argv[]) {
     print_list(hhead);
     printf("\n");
         
-    si = search_by_value(hhead, 2);
-    printf("Search by value for value 2 returned: %d\n", si);
+    search_by_value(hhead, 2, indxptr);
+    printf("Search by value for value 2 returned: %d\n", *indxptr);
     print_list(hhead);
     printf("\n");
     
-    si = search_by_value(hhead, 3);
-    printf("Search by value for value 3 returned: %d\n", si);
+    search_by_value(hhead, 3, indxptr);
+    printf("Search by value for value 3 returned: %d\n", *indxptr);
     print_list(hhead);
     printf("\n");
     
-    si = search_by_value(hhead, 777);
-    printf("Search by value for value 777 returned: %d\n", si);
+    //This one we expect to fail the search, so we should catch the
+    //returned error and do something.
+    result = search_by_value(hhead, 777, indxptr);
+    if(result != 0){
+        printf("Search by value for value 777 returned -1, value does not exist!\n");
+    }else{
+        printf("Search by value for value 777 returned: %d\n", *indxptr);
+    }
     print_list(hhead);
     printf("\n");
     
@@ -360,3 +387,16 @@ int main(int argc, const char * argv[]) {
     
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
