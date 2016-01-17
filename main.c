@@ -68,12 +68,8 @@ int search_by_value(struct node **head, int dvalue, int *findex) {
 //Asserts on malloc failure and returns 0 on success
 int insert_at_front(struct node **head, int newval) {
     struct node *newnode = malloc(sizeof(struct node));
-    if(newnode == NULL) {
-        assert(newnode != NULL);
-        //if we failed to allocate from the heap, assert.
-        //This could/should be changed in production code
-        //to simply return -1.
-    }
+    assert(newnode != NULL);
+
     newnode->value = newval;
     //case 1:  insert into an empty list
     if(*head == NULL) {
@@ -92,13 +88,8 @@ int insert_at_front(struct node **head, int newval) {
 //Asserts on malloc failure and returns 0 on success
 int insert_at_tail(struct node **head, int newval) {
     struct node *newnode = malloc(sizeof(struct node));
-    newnode->value = newval;
-    if(newnode == NULL) {
-        assert(newnode != NULL);
-        //if we failed to allocate from the heap, bail out.
-        //This could/should be changed in production code
-        //to simply return -1.
-    }
+    assert(newnode != NULL);
+
     newnode->value = newval;
     //case 1:  insert into empty list
     if(*head == NULL) {
@@ -129,12 +120,8 @@ int insert_at_index(struct node **head, int newval, int index) {
         //initialize i to the first position
         int i = 0;
         struct node *newnode = malloc(sizeof(struct node));
-        if(newnode == NULL) {
-            assert(newnode != NULL);
-            //if we failed to allocate from the heap, bail out.
-            //This could/should be changed in production code
-            //to simply return -1.
-        }
+        assert(newnode != NULL);
+
         newnode->value = newval;
         while(current->next != NULL && i < (index - 1)){
             //If the index is higher than the size of the list
